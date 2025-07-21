@@ -548,8 +548,36 @@ const Chat = (props: Props) => {
           }
         }}
       />
+      {/* Stripe Checkout Button */}
+      <CheckoutButton />
     </div>
   );
 };
+
+// Stripe Checkout Button Component
+import { loadStripe } from '@stripe/stripe-js';
+
+const stripePromise = loadStripe('pk_test_51RmvXpR3lsSLcEG3hw35Ymth6maT6todq3W36Cor1E1HCdddrsir7J2PTA5k2i63QQCiz5EZPJk76e7bC8gmBOEj00SovhougX');
+
+function CheckoutButton() {
+  const [loading, setLoading] = React.useState(false);
+  const handleCheckout = async () => {
+    setLoading(true);
+    const res = await fetch('/api/checkout', { method: 'POST' });
+    const data = await res.json();
+    const stripe = await stripePromise;
+    if (data.sessionId && stripe) {
+      await stripe.redirectToCheckout({ sessionId: data.sessionId });
+    } else {
+      alert('Failed to create Stripe session.');
+    }
+    setLoading(false);
+  };
+  return (
+    <button onClick={handleCheckout} disabled={loading} style={{ margin: '24px auto', display: 'block', padding: '12px 32px', fontSize: 18, background: '#635bff', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer' }}>
+      {loading ? 'Redirecting...' : 'Buy with Stripe'}
+    </button>
+  );
+}
 
 export default Chat;
